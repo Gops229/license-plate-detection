@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Video Processing</title>
+</head>
+<body>
+    <h1>Video Processing</h1>
+    <h2>Detected Car Plate Data:</h2>
+    <ul id="plate_data_list"></ul>
+
+    <h2>Video Feed:</h2>
+    <button onclick="increasePlaybackSpeed()">Increase Speed</button>
+    <script>
+        // Function to increase the playback speed of the video feed
+        function increasePlaybackSpeed() {
+            var video = document.getElementById('video_feed');
+            if (video.playbackRate < 16) { // Limiting to 16x to avoid distortion
+                video.playbackRate += 1.25; // Increase playback rate by 0.25x
+            }
+        }
+    </script>
+    <img id="video_feed" src="{{ url_for('video_feed', filename=filename) }}" alt="Video Feed" width="1020" height="500" defaultPlaybackRate = 0.5 >
+
+    <script>
+        // Function to update the car plate data list
+        function updatePlateData() {
+            fetch('/plate_data')  // Fetch the car plate data from the server
+                .then(response => response.text())  // Convert the response to text
+                .then(data => {
+                    // Split the text data into an array of lines
+                    const plateData = data.split('\n');
+
+                    // Get the ul element to display the car plate data
+                    const plateDataList = document.getElementById('plate_data_list');
+
+                    // Clear the existing list items
+                    plateDataList.innerHTML = '';
+
+                    // Add each car plate data as a list item
+                    plateData.forEach(plate => {
+                        if (plate.trim() !== '') {
+                            const listItem = document.createElement('li');
+                            listItem.textContent = plate;
+                            plateDataList.appendChild(listItem);
+                        }
+                    });
+                })
+                .catch(error => console.error('Error fetching plate data:', error));
+        }
+
+        // Function to update the video feed every second
+        function updateVideoFeed() {
+            document.getElementById('video_feed').src = "{{ url_for('video_feed', filename=filename) }}?" + new Date().getTime();
+        }
+
+        // Call the update functions initially and then every second
+        updatePlateData();
+        setInterval(updatePlateData, 1000);
+        setInterval(updateVideoFeed, 1000);
+    </script>
+
+</body>
+</html>
